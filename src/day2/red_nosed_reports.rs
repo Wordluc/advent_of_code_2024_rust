@@ -5,7 +5,7 @@ enum Order {
     Desc = 1,
 }
 impl Order {
-    fn equal(&self, o: &Order)->bool {
+    fn equal(&self, o: &Order) -> bool {
         match self {
             Order::Asc => match o {
                 Order::Asc => true,
@@ -43,7 +43,7 @@ fn read_content(file_path: String) -> Vec<Vec<i32>> {
     ret
 }
 fn check_range(a: i32, b: i32) -> Result<Order, String> {
-    let diff = a - b;
+    let diff = b - a;
     if diff > 0 && diff.abs() <= 3 {
         Ok(Order::Asc)
     } else if diff < 0 && diff.abs() <= 3 {
@@ -72,14 +72,10 @@ fn check_order(line: &Vec<i32>) -> Order {
     }
 }
 fn check_order_without_sacrifice(line: &Vec<i32>) -> Result<Order, String> {
-    Ok(Order::Asc)
-}
-
-fn check_order_with_sacrifice(line: &Vec<i32>) -> Result<Order, String> {
     let order: Order = check_order(line);
     let mut pre = line[0];
     for el in &line[1..] {
-        let res = check_range(*el, pre);
+        let res = check_range(pre, *el);
         match res {
             Ok(o) => {
                 if !o.equal(&order) {
@@ -93,6 +89,27 @@ fn check_order_with_sacrifice(line: &Vec<i32>) -> Result<Order, String> {
         pre = *el
     }
     Ok(order)
+}
+fn level_is_ok(level:&Result<Order,String>,o:&Order)->bool{
+    match level{
+        Ok(l)=>{
+            l.equal(&o)
+        },
+        Err(_)=>{
+            false
+        }
+    }
+}
+fn check_order_with_sacrifice(line: &Vec<i32>) -> Result<Order, String> {
+    let order: Order = check_order(line);
+    for i in 0..line.len(){
+        let mut temp_line=line.clone();
+        temp_line.remove(i);
+        if check_order_without_sacrifice(&temp_line).is_ok(){
+            return Ok(order)
+        }
+    }
+    Err("Not found".to_string())
 }
 
 fn check_reports(reports: &Vec<Vec<i32>>, check_f: fn(&Vec<i32>) -> Result<Order, String>) -> i32 {
@@ -167,16 +184,49 @@ mod test {
     fn test_wrong_order_with_sacrifice1() {
         let prova: Vec<i32> = vec![2, 1, 3, 5, 8];
         let r = check_order_with_sacrifice(&prova);
-        println!("{:?}", r);
-        assert!(!r.is_ok())
+        assert!(r.is_ok())
     }
     #[test]
     fn test_wrong_order_with_sacrifice2() {
         let prova: Vec<i32> = vec![3, 1, 2, 4, 5, 6];
         let r = check_order_with_sacrifice(&prova);
-        println!("{:?}", r);
-        assert!(!r.is_ok())
+        assert!(r.is_ok())
     }
+    #[test]
+    fn test_wrong_order_with_sacrifice3() {
+        let prova: Vec<i32> = vec![48, 46, 47, 49, 51, 54, 56];
+        let r = check_order_with_sacrifice(&prova);
+        assert!(r.is_ok())
+    }
+    #[test]
+    fn test_wrong_order_with_sacrifice5() {
+        let prova: Vec<i32> = vec![5, 1, 2, 3, 4, 5];
+        let r = check_order_with_sacrifice(&prova);
+        assert!(r.is_ok())
+    }
+    #[test]
+    fn test_wrong_order_with_sacrifice6() {
+        let prova: Vec<i32> = vec![1 ,4, 3, 4, 5 ];
+        let r = check_order_with_sacrifice(&prova);
+        assert!(r.is_ok())
+    }
+    #[test]
+    fn test_wrong_order_with_sacrifice4() {
+        let mut a: Vec<Vec<i32>> = Vec::new();
+        a.push(vec![29, 28, 27, 25, 26, 25, 22, 20]);
+        a.push(vec![7, 10, 8, 10, 11]);
+        a.push(vec![9, 8, 7, 6, 7]);
+        a.push(vec![1, 2, 3, 4, 3]);
+        a.push(vec![1, 6, 7, 8, 9]);
+        a.push(vec![1, 4, 3, 2, 1]);
+        a.push(vec![1, 2, 3, 4, 5, 5]);
+        a.push(vec![1, 1, 2, 3, 4, 5]);
+        a.push(vec![5, 1, 2, 3, 4, 5]);
+        a.push(vec![1, 4, 2, 3, 6]);
+        a.push(vec![48, 46, 47, 49, 51, 54, 56]);
+        assert_eq!(check_reports(&a, check_order_with_sacrifice), 11);
+    }
+    #[test]
     fn test_red_nosed_2() {
         let a = read_content(String::from("src/day2/input"));
         assert_eq!(check_reports(&a, check_order_with_sacrifice), 0);

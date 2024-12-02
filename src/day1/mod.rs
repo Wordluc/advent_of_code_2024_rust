@@ -1,1 +1,1 @@
-pub mod day1;
+mod historian_hysteria;
