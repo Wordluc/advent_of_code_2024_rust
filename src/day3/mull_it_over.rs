@@ -1,7 +1,6 @@
 use std::fs;
 fn read_content(path:String)->String{
     return fs::read_to_string(path).expect("Unable to read file");
-    
 }
 
 mod test{
