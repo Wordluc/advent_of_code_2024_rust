@@ -27,7 +27,8 @@ fn read_content(file_path: String) -> Vec<Vec<i32>> {
     for line in lines {
         let parts = line.split(" ");
         let mut l: Vec<i32> = Vec::new();
-        for part in parts {
+        for mut part in parts {
+            part = part.trim();
             conv = part.parse::<i32>();
             if conv.is_err() {
                 break;
@@ -126,7 +127,7 @@ mod test {
     use super::*;
     #[test]
     fn test_read_content() {
-        let a = read_content(String::from("src/day2/input"));
+        let a = read_content(String::from("src/day2/input.txt"));
         if a.len() == 0 {
             if a[0].len() == 0 {
                 panic!("impossible");
@@ -165,7 +166,7 @@ mod test {
     }
     #[test]
     fn test_red_nosed_1() {
-        let a = read_content(String::from("src/day2/input"));
+        let a = read_content(String::from("src/day2/input.txt"));
         assert_eq!(check_reports(&a, check_order_without_sacrifice), 524);
     }
 
@@ -228,7 +229,7 @@ mod test {
     }
     #[test]
     fn test_red_nosed_2() {
-        let a = read_content(String::from("src/day2/input"));
-        assert_eq!(check_reports(&a, check_order_with_sacrifice), 0);
+        let a = read_content(String::from("src/day2/input.txt"));
+        assert_eq!(check_reports(&a, check_order_with_sacrifice), 569);
     }
 }
