@@ -8,17 +8,21 @@ fn read_content(path: String) -> String {
 fn get_parm(str: String) -> Result<(i32, i32), String> {
     let value: String = str[0..str.len()].to_string();
     let mut split = value.split(",");
-    if split.clone().count() != 2 {
-        return Err("Invalid input".to_string());
+    let a=match split.next() {
+        None => return Err(format!("Invalid input {}", value)),
+        Some(a) => a.parse::<i32>(),
+    };
+    if a.is_err() {
+        return Err(a.unwrap_err().to_string());
     }
-    let a = split.next().unwrap().parse::<i32>();
-    let b = split.next().unwrap().parse::<i32>();
-    if a.is_err() || b.is_err() {
-        return Err(format!("Invalid input {}",value));
+    let b=match split.next() {
+        None => return Err(format!("Invalid input {}", value)),
+        Some(b) => b.parse::<i32>(),
+    };
+    if b.is_err() {
+        return Err(b.unwrap_err().to_string());
     }
-    let a = a.unwrap();
-    let b = b.unwrap();
-    return Ok((a, b));
+    return Ok((a.unwrap(), b.unwrap()));
 }
 
 fn find(str: String) -> Result<Vec<(i32, i32)>, String> {
