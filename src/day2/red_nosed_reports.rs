@@ -39,7 +39,6 @@ fn read_content(file_path: String) -> Vec<Vec<i32>> {
             break;
         }
         ret.push(l.clone());
-        l.clear();
     }
     ret
 }
