@@ -8,14 +8,14 @@ fn read_content(path: String) -> String {
 fn get_parm(str: String) -> Result<(i32, i32), String> {
     let value: String = str[0..str.len()].to_string();
     let mut split = value.split(",");
-    let a=match split.next() {
+    let a = match split.next() {
         None => return Err(format!("Invalid input {}", value)),
         Some(a) => a.parse::<i32>(),
     };
     if a.is_err() {
         return Err(a.unwrap_err().to_string());
     }
-    let b=match split.next() {
+    let b = match split.next() {
         None => return Err(format!("Invalid input {}", value)),
         Some(b) => b.parse::<i32>(),
     };
@@ -27,38 +27,48 @@ fn get_parm(str: String) -> Result<(i32, i32), String> {
 
 fn find(str: String) -> Result<Vec<(i32, i32)>, String> {
     let reg = Regex::new(r"mul\([0-9]+,[0-9]+\)");
-    if reg.is_err() {
-        return Err(reg.unwrap_err().to_string());
-    }
-    let reg = reg.unwrap();
+    let reg = match reg {
+        Err(e) => return Err(e.to_string()),
+        Ok(a) => a,
+    };
     let mut res: Vec<(i32, i32)> = Vec::new();
     for x in reg.find_iter(&str) {
         let x = x.as_str()[4..x.len() - 1].to_string();
         match get_parm(x) {
             Ok(a) => res.push(a),
-            Err(e) => return Err(e)
+            Err(e) => return Err(e),
         }
     }
     return Ok(res);
 }
 fn find_with_condition(str: String) -> Result<Vec<(i32, i32)>, String> {
     let reg = Regex::new(r"mul\([0-9]+,[0-9]+\)|do\(\)|don't\(\)");
-    if reg.is_err() {
-        return Err(reg.unwrap_err().to_string());
-    }
-    let reg = reg.unwrap();
+    let reg = match reg {
+        Err(e) => return Err(e.to_string()),
+        Ok(a) => a,
+    };
     let mut res: Vec<(i32, i32)> = Vec::new();
-    let mut to_sum:bool = true;
+    let mut to_sum: bool = true;
     for x in reg.find_iter(&str) {
         match x.as_str() {
-            "do()" => {to_sum = true; continue;},
-            "don't()" =>{to_sum = false;continue;}
-            _ => {if !to_sum {continue;}}
+            "do()" => {
+                to_sum = true;
+                continue;
+            }
+            "don't()" => {
+                to_sum = false;
+                continue;
+            }
+            _ => {
+                if !to_sum {
+                    continue;
+                }
+            }
         }
         let x = x.as_str()[4..x.len() - 1].to_string();
         match get_parm(x) {
             Ok(a) => res.push(a),
-            Err(e) => return Err(e)
+            Err(e) => return Err(e),
         }
     }
     return Ok(res);
@@ -76,15 +86,16 @@ mod test {
         let a = read_content("src/day3/input".to_string());
         let r = find(a);
         match &r {
-            Ok(_) => {},
-            Err(e) => {println!("{}", e);assert!(false)}
+            Ok(_) => {}
+            Err(e) => {
+                println!("{}", e);
+                assert!(false)
+            }
         }
         assert_eq!(r.is_ok(), true);
-        let r =r.unwrap();
+        let r = r.unwrap();
         let mut sum = 0;
-        r.iter().for_each(|x| {
-            sum += x.0 * x.1
-        });
+        r.iter().for_each(|x| sum += x.0 * x.1);
         assert_eq!(sum, 161289189);
     }
     #[test]
@@ -92,15 +103,16 @@ mod test {
         let a = read_content("src/day3/input".to_string());
         let r = find_with_condition(a);
         match &r {
-            Ok(_) => {},
-            Err(e) => {println!("{}", e);assert!(false)}
+            Ok(_) => {}
+            Err(e) => {
+                println!("{}", e);
+                assert!(false)
+            }
         }
         assert_eq!(r.is_ok(), true);
-        let r =r.unwrap();
+        let r = r.unwrap();
         let mut sum = 0;
-        r.iter().for_each(|x| {
-            sum += x.0 * x.1
-        });
+        r.iter().for_each(|x| sum += x.0 * x.1);
         assert_eq!(sum, 83595109);
     }
 }
