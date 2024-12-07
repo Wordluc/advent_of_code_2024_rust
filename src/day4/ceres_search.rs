@@ -149,63 +149,44 @@ fn get_n_x_match(word:String, text: &Vec<String>) -> Result<i32, String> {
         Some(c) => c,
         None => return Err("No first letter".to_string()),
     };
-    let mut dic_x:HashMap<String,Vec<Orientation>>=HashMap::new();
-    let coordinates_first_letter: Vec<Coordinates> = search_letter(first_letter, &text);
-    let mut center:Coordinates;
-    for pos in coordinates_first_letter {
-        if search_word_45(&word, &text, &pos).is_some() {
-            center=Coordinates{x:pos.x+1,y:pos.y-1};
-            match dic_x.entry(center.get_string()){
-                Entry::Vacant(e) => {
-                    e.insert(vec![Orientation::_45]);
-                }
-                Entry::Occupied(mut e) => {
-                    e.get_mut().push(Orientation::_45);
+    fn search(coordinates_first_letter: Vec<Coordinates>,word: &String, text: &Vec<String>, dic_x: &mut HashMap<String,Vec<Orientation>>) {
+        let  mut center:Coordinates;
+        for pos in coordinates_first_letter {
+            if search_word_45(&word, &text, &pos).is_some() {
+                center=Coordinates{x:pos.x+1,y:pos.y-1};
+                match dic_x.entry(center.get_string()){
+                    Entry::Vacant(e) => {
+                        e.insert(vec![Orientation::_45]);
+                    }
+                    Entry::Occupied(mut e) => {
+                        e.get_mut().push(Orientation::_45);
+                    }
                 }
             }
-        }
-        if search_word_275(&word, &text, &pos).is_some() {
-            center=Coordinates{x:pos.x+1,y:pos.y+1};
-            match dic_x.entry(center.get_string()){
-                Entry::Vacant(e) => {
-                    e.insert(vec![Orientation::_275]);
-                }
-                Entry::Occupied(mut e) => {
-                    e.get_mut().push(Orientation::_275);
+            if search_word_275(&word, &text, &pos).is_some() {
+                center=Coordinates{x:pos.x+1,y:pos.y+1};
+                match dic_x.entry(center.get_string()){
+                    Entry::Vacant(e) => {
+                        e.insert(vec![Orientation::_275]);
+                    }
+                    Entry::Occupied(mut e) => {
+                        e.get_mut().push(Orientation::_275);
+                    }
                 }
             }
         }
     }
+    let mut dic_x:HashMap<String,Vec<Orientation>>=HashMap::new();
+    let coordinates_first_letter: Vec<Coordinates> = search_letter(first_letter, &text);
+    search(coordinates_first_letter,&word, &text, &mut dic_x);
+
     let word:String=word.chars().rev().collect();
     let first_letter = match word.chars().nth(0) {
         Some(c) => c,
         None => return Err("No first letter".to_string()),
     };
     let coordinates_first_letter: Vec<Coordinates> = search_letter(first_letter, &text);
-    for pos in coordinates_first_letter {
-        if search_word_45(&word, &text, &pos).is_some() {
-            center=Coordinates{x:pos.x+1,y:pos.y-1};
-            match dic_x.entry(center.get_string()){
-                Entry::Vacant(e) => {
-                    e.insert(vec![Orientation::_45]);
-                }
-                Entry::Occupied(mut e) => {
-                    e.get_mut().push(Orientation::_45);
-                }
-            }
-        }
-        if search_word_275(&word, &text, &pos).is_some() {
-            center=Coordinates{x:pos.x+1,y:pos.y+1};
-            match dic_x.entry(center.get_string()){
-                Entry::Vacant(e) => {
-                    e.insert(vec![Orientation::_275]);
-                }
-                Entry::Occupied(mut e) => {
-                    e.get_mut().push(Orientation::_275);
-                }
-            }
-        }
-    }
+    search(coordinates_first_letter,&word, &text, &mut dic_x);
     let mut found=0;
     for (d,v) in dic_x{
         println!("{:?}",d);
@@ -367,6 +348,6 @@ mod test {
     fn test_advent_of_code_x_2() {
         let input = read_content("src/day4/input.txt".to_string());
         let a = get_n_x_match("MAS".to_string(), &input);
-        assert_eq!(a.unwrap(), 2);
+        assert_eq!(a.unwrap(), 1880);
     }
 }
