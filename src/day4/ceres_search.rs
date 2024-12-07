@@ -1,230 +1,319 @@
-use std::fs;
+use std::{collections::{hash_map::Entry, HashMap}, fs};
 fn read_content(file_path: String) -> Vec<String> {
     let file = fs::read_to_string(file_path).expect("Unable to read file");
     let lines = file.split("\n");
     let mut ret: Vec<String> = Vec::new();
     for line in lines {
+        if line.len() == 0 {
+            break;
+        }
         ret.push(line.to_string());
     }
     ret
 }
-
-struct Point {
-    x: usize,
-    y: usize,
+#[derive(Debug)]
+struct Coordinates {
+    x: i32,
+    y: i32,
 }
-enum Direction {
-    Vertical,
-    Horizontal,
-    Oblique45,
-    Oblique275,
+impl Coordinates {
+    fn get_string(&self) -> String {
+        return format!("[{},{}]", self.x, self.y);
+    }
 }
-fn get_part_string(
-    to_search: &str,
-    in_string: &Vec<String>,
-    occurence_first_char: &Point,
-    dir: &Direction,
-) -> Result<Vec<String>, String> {
-    let mut ret: Vec<String> = Vec::new();
-    let lenght = to_search.chars().count();
-    match dir {
-        Direction::Vertical => {
-            let mut str: String = "".to_string();
-            if occurence_first_char.y + lenght < in_string.len() {
-                for y in occurence_first_char.y..occurence_first_char.y + lenght {
-                    let char = in_string[y].to_string();
-                    let char = char.chars().nth(occurence_first_char.x-1);
-                    if char.is_none() {
-                        break;
-                    }
-                    let char = char.unwrap();
-                    str.push(char);
-                }
-            }
-
-            if str.len() != 0 {
-                ret.push(str);
-            }
-            let mut str: String = "".to_string();
-            if occurence_first_char.y as i32 - lenght as i32 >= 0 {
-                for y in occurence_first_char.y - lenght +1..occurence_first_char.y+1  {
-                    let char = in_string[y].to_string();
-                    let char = char.chars().nth(occurence_first_char.x-1);
-                    if char.is_none() {
-                        break;
-                    }
-                    let char = char.unwrap();
-                    str.push(char);
-                }
-            }
-            if str.len() != 0 {
-                ret.push(str);
-            }
-        }
-        Direction::Horizontal => {
-            if occurence_first_char.x + lenght-1 < in_string[0].len()+1 {
-                ret.push(
-                    in_string[occurence_first_char.y]
-                    [occurence_first_char.x-1..occurence_first_char.x + lenght-1]
-                    .to_string(),
-                );
-            }
-            if (occurence_first_char.x as i32 - lenght as i32) >= 0 as i32 {
-                ret.push(
-                    in_string[occurence_first_char.y]
-                    [occurence_first_char.x - lenght..occurence_first_char.x]
-                    .to_string(),
-                );
-            }
-        }
-        Direction::Oblique45 => {
-            let mut str: String = "".to_string();
-            let starting_point: Point = Point {
-                x: occurence_first_char.x,
-                y: occurence_first_char.y,
-            };
-            if starting_point.y as i32 - lenght as i32 >= 0 {
-                for i in 0..lenght {
-                    let char = in_string[starting_point.y - i].to_string();
-                    let char = char.chars().nth(starting_point.x + i-1);
-                    if char.is_none() {
-                        str = "".to_string();
-                        break;
-                    }
-                    let char = char.unwrap();
-                    str.push(char);
-                }
-            }
-            if str.len() != 0 {
-                ret.push(str);
-            }
-            if (occurence_first_char.x as i32 - lenght as i32) >= 0 {
-                if (occurence_first_char.y as i32 + lenght as i32) < in_string.len() as i32 {
-                    let starting_point: Point = Point {
-                        x: occurence_first_char.x - lenght,
-                        y: occurence_first_char.y + lenght - 1,
-                    };
-                    let mut str: String = "".to_string();
-                    for i in 0..lenght {
-                        let char = in_string[starting_point.y - i].to_string();
-                        let char = char.chars().nth(starting_point.x + i);
-                        if char.is_none() {
-                            str = "".to_string();
-                            break;
-                        }
-                        let char = char.unwrap();
-                        str.push(char);
-                    }
-                    if str.len() != 0 {
-                        ret.push(str);
+fn search_letter(letter: char, text: &Vec<String>) -> Vec<Coordinates> {
+    let mut coordinates: Vec<Coordinates> = Vec::new();
+    for y in 0..text.len() {
+        for x in 0..text[y].len() {
+            match text[y].chars().nth(x) {
+                Some(c) => {
+                    if c == letter {
+                        coordinates.push(Coordinates {
+                            x: x as i32,
+                            y: y as i32,
+                        });
                     }
                 }
-            }
-        }
-        Direction::Oblique275 => {
-            let mut str: String = "".to_string();
-            let starting_point: Point = Point {
-                x: occurence_first_char.x,
-                y: occurence_first_char.y,
-            };
-            if (occurence_first_char.x as i32 + lenght as i32-1) < in_string.len() as i32 {
-                if (occurence_first_char.y as i32 + lenght as i32) < in_string.len() as i32 {
-                    println!("{}{}", occurence_first_char.x, occurence_first_char.y);
-                    for i in 0..lenght {
-                        let char = in_string[starting_point.y + i].to_string();
-                        let char = char.chars().nth(starting_point.x + i);
-                        if char.is_none() {
-                            str = "".to_string();
-                            break;
-                        }
-                        let char = char.unwrap();
-                        str.push(char);
-                    }
-                    if str.len() != 0 {
-                        ret.push(str);
-                    }
-                }
-            }
-            if (occurence_first_char.x as i32 - lenght as i32) >= 0 {
-
-                if (occurence_first_char.y as i32 - lenght as i32) >= 0 {
-                    let starting_point: Point = Point {
-                        x: occurence_first_char.x - lenght,
-                        y: occurence_first_char.y - lenght,
-                    };
-                    let mut str: String = "".to_string();
-                    for i in 0..lenght {
-                        let char = in_string[starting_point.y + i].to_string();
-                        let char = char.chars().nth(starting_point.x + i);
-                        if char.is_none() {
-                            str = "".to_string();
-                            break;
-                        }
-                        let char = char.unwrap();
-                        str.push(char);
-                    }
-                    if str.len() != 0 {
-                        ret.push(str);
-                    }
-                }
+                None => {}
             }
         }
     }
-    return Ok(ret);
+    return coordinates;
 }
-fn get_occuranges(first_char: char, in_string: &Vec<String>) -> Vec<Point> {
-    let mut occurences_first_char: Vec<Point> = Vec::new();
-    for y in 0..in_string.len() {
-        for x in 0..in_string[y].len() {
-            if in_string[y].chars().nth(x).unwrap() == first_char {
-                occurences_first_char.push(Point { x:(x+1), y });
-            }
+
+fn search_word_horizontal(word: &String, text: &Vec<String>, pos: &Coordinates) -> Option<()> {
+    let lenght = word.len() as i32;
+    let slice: &str;
+    if pos.x + lenght <= (text[pos.y as usize].len() as i32) {
+        slice = &text[pos.y as usize][pos.x as usize..(pos.x + lenght) as usize];
+        if slice == word {
+            return Some(());
         }
     }
-    occurences_first_char
+    return None;
 }
-fn number_of_occurences(search: &str, in_string: Vec<String>) -> Result<i32, String> {
-    let mut occurences_first_char: Vec<Point> = Vec::new();
-    let first_char: char;
+
+fn search_word_vertical(word: &String, texts: &Vec<String>, pos: &Coordinates) -> Option<()> {
+    let lenght = word.len() as i32;
+    let mut i_word = 0;
+    for text in &texts[(pos.y as usize)..] {
+        if text.chars().nth(pos.x as usize).unwrap() != word.chars().nth(i_word).unwrap() {
+            break;
+        }
+        i_word += 1;
+        if i_word as i32 >= lenght {
+            return Some(());
+        }
+    }
+    return None;
+}
+
+fn search_word_45(word: &String, texts: &Vec<String>, pos: &Coordinates) -> Option<()> {
+    let lenght = word.len() as i32;
+    let mut i_word = 0;
+    if pos.y - (lenght - 1) < 0 {
+        return None;
+    }
+    let texts = &texts[((pos.y - (lenght - 1)) as usize)..=pos.y as usize];
+    for text in texts.iter() {
+        if pos.x + i_word >= text.len() as i32 {
+            break;
+        }
+        if (pos.x + lenght - 1 - i_word) >= (text.len() as i32) {
+            break;
+        }
+        if text
+            .chars()
+                .nth((pos.x + lenght - 1 - i_word) as usize)
+                .unwrap()
+                != word.chars().nth((lenght - 1 - i_word) as usize).unwrap()
+        {
+            break;
+        }
+        i_word += 1;
+        if i_word as i32 >= lenght {
+            return Some(());
+        }
+    }
+    None
+}
+fn search_word_275(word: &String, texts: &Vec<String>, pos: &Coordinates) -> Option<()> {
+    let lenght = word.len() as i32;
+    let mut i_word = 0;
+    for text in &texts[(pos.y as usize)..] {
+        if pos.x + i_word >= text.len() as i32 {
+            break;
+        }
+        if text.chars().nth((pos.x + i_word) as usize).unwrap()
+            != word.chars().nth((i_word) as usize).unwrap()
+        {
+            break;
+        }
+        i_word += 1;
+        if i_word as i32 >= lenght {
+            return Some(());
+        }
+    }
+    None
+}
+fn get_n_match(work: String, text: &Vec<String>) -> Result<i32, String> {
+    let first_letter = match work.chars().nth(0) {
+        Some(c) => c,
+        None => return Err("No first letter".to_string()),
+    };
+    let coordinates_first_letter: Vec<Coordinates> = search_letter(first_letter, &text);
     let mut founded: i32 = 0;
-    match search.chars().nth(0) {
-        Some(x) => first_char = x,
-        None => return Err("Invalid input".to_string()),
+    for pos in coordinates_first_letter {
+        if search_word_vertical(&work, &text, &pos).is_some() {
+            founded += 1;
+        }
+        if search_word_horizontal(&work, &text, &pos).is_some() {
+            founded += 1;
+        }
+        if search_word_45(&work, &text, &pos).is_some() {
+            founded += 1;
+        }
+        if search_word_275(&work, &text, &pos).is_some() {
+            founded += 1;
+        }
     }
-    let directions = vec![
-        Direction::Horizontal,
-        Direction::Vertical,
-        Direction::Oblique275,
-        Direction::Oblique45,
-    ];
-    occurences_first_char = get_occuranges(first_char, &in_string);
-    for occ in occurences_first_char {
-        for dir in &directions {
-            let res = get_part_string(search, &in_string, &occ, dir);
-            match res {
-                Ok(a) => {
-                    if a.contains(&search.to_string()) {
-                        founded += 1;
-                    } else {
-                        for mut e in a {
-                            e = e.chars().rev().collect::<String>();
-                            if e.contains(&search.to_string()) {
-                                founded += 1;
-                            }
-                        }
-                    }
+    Ok(founded)
+}
+#[derive(Debug)]
+enum Orientation {
+    _45,
+    _275,
+}
+fn get_n_x_match(word:String, text: &Vec<String>) -> Result<i32, String> {
+    let first_letter = match word.chars().nth(0) {
+        Some(c) => c,
+        None => return Err("No first letter".to_string()),
+    };
+    let mut dic_x:HashMap<String,Vec<Orientation>>=HashMap::new();
+    let coordinates_first_letter: Vec<Coordinates> = search_letter(first_letter, &text);
+    let mut center:Coordinates;
+    for pos in coordinates_first_letter {
+        if search_word_45(&word, &text, &pos).is_some() {
+            center=Coordinates{x:pos.x+1,y:pos.y-1};
+            match dic_x.entry(center.get_string()){
+                Entry::Vacant(e) => {
+                    e.insert(vec![Orientation::_45]);
                 }
-                Err(_) => {}
+                Entry::Occupied(mut e) => {
+                    e.get_mut().push(Orientation::_45);
+                }
+            }
+        }
+        if search_word_275(&word, &text, &pos).is_some() {
+            center=Coordinates{x:pos.x+1,y:pos.y+1};
+            match dic_x.entry(center.get_string()){
+                Entry::Vacant(e) => {
+                    e.insert(vec![Orientation::_275]);
+                }
+                Entry::Occupied(mut e) => {
+                    e.get_mut().push(Orientation::_275);
+                }
             }
         }
     }
-    return Ok(founded);
+    let word:String=word.chars().rev().collect();
+    let first_letter = match word.chars().nth(0) {
+        Some(c) => c,
+        None => return Err("No first letter".to_string()),
+    };
+    let coordinates_first_letter: Vec<Coordinates> = search_letter(first_letter, &text);
+    for pos in coordinates_first_letter {
+        if search_word_45(&word, &text, &pos).is_some() {
+            center=Coordinates{x:pos.x+1,y:pos.y-1};
+            match dic_x.entry(center.get_string()){
+                Entry::Vacant(e) => {
+                    e.insert(vec![Orientation::_45]);
+                }
+                Entry::Occupied(mut e) => {
+                    e.get_mut().push(Orientation::_45);
+                }
+            }
+        }
+        if search_word_275(&word, &text, &pos).is_some() {
+            center=Coordinates{x:pos.x+1,y:pos.y+1};
+            match dic_x.entry(center.get_string()){
+                Entry::Vacant(e) => {
+                    e.insert(vec![Orientation::_275]);
+                }
+                Entry::Occupied(mut e) => {
+                    e.get_mut().push(Orientation::_275);
+                }
+            }
+        }
+    }
+    let mut found=0;
+    for (d,v) in dic_x{
+        println!("{:?}",d);
+        if v.len()==2{
+            found+=1;
+        }
+    }
+    Ok(found)
 }
 mod test {
     use super::*;
-    fn test_example() {
+    #[test]
+    fn test_horizzontal_search() {
+        let text = vec![
+            "00000Abcd00Abc000".to_string(),
+            "Abc0".to_string(),
+            "0A".to_string(),
+        ];
+        let positions = search_letter('A', &text);
+        assert_eq!(positions.len(), 4);
+        let mut positions = positions.iter();
+        let mut result: Option<()>;
 
-        let input = vec![
+        result = search_word_horizontal(&"Abc".to_string(), &text, &(positions.next().unwrap()));
+        assert!(result.is_some());
+
+        result = search_word_horizontal(&"Abc".to_string(), &text, &(positions.next().unwrap()));
+        assert!(result.is_some());
+
+        result = search_word_horizontal(&"Abc".to_string(), &text, &(positions.next().unwrap()));
+        assert!(result.is_some());
+
+        result = search_word_horizontal(&"Abc".to_string(), &text, &(positions.next().unwrap()));
+        assert!(result.is_none());
+    }
+    #[test]
+    fn test_vertical_search() {
+        let text = vec![
+            "AbcA".to_string(),
+            "bAbb".to_string(),
+            "ccAc".to_string(),
+            "acvc".to_string(),
+        ];
+
+        let positions = search_letter('A', &text);
+        assert_eq!(positions.len(), 4);
+        let mut positions = positions.iter();
+        let mut result: Option<()>;
+
+        result = search_word_vertical(&"Abc".to_string(), &text, &(positions.next().unwrap()));
+        assert!(result.is_some());
+
+        result = search_word_vertical(&"Abc".to_string(), &text, &(positions.next().unwrap()));
+        assert!(result.is_some());
+
+        result = search_word_vertical(&"Abc".to_string(), &text, &(positions.next().unwrap()));
+        assert!(result.is_none());
+    }
+    #[test]
+    fn test_45_search() {
+        let text = vec![
+            "qqcA".to_string(),
+            "qbcb".to_string(),
+            "AbAc".to_string(),
+            "Acvc".to_string(),
+        ];
+
+        let positions = search_letter('A', &text);
+        assert_eq!(positions.len(), 4);
+        let mut positions = positions.iter();
+        let mut result: Option<()>;
+
+        result = search_word_45(&"Abc".to_string(), &text, &(positions.next().unwrap()));
+        assert!(result.is_none());
+        result = search_word_45(&"Abc".to_string(), &text, &(positions.next().unwrap()));
+        assert!(result.is_some());
+        println!("dggf");
+        result = search_word_45(&"Abc".to_string(), &text, &(positions.next().unwrap()));
+        assert!(result.is_none());
+        result = search_word_45(&"Abc".to_string(), &text, &(positions.next().unwrap()));
+        assert!(result.is_some());
+    }
+    #[test]
+    fn test_275_search() {
+        let text = vec![
+            "AccA".to_string(),
+            "Abbb".to_string(),
+            "AbcA".to_string(),
+            "cccc".to_string(),
+        ];
+
+        let positions = search_letter('A', &text);
+        assert_eq!(positions.len(), 5);
+        let mut positions = positions.iter();
+        let mut result: Option<()>;
+
+        result = search_word_275(&"Abc".to_string(), &text, &(positions.next().unwrap()));
+        assert!(result.is_some());
+        result = search_word_275(&"Abc".to_string(), &text, &(positions.next().unwrap()));
+        assert!(result.is_none());
+        result = search_word_275(&"Abc".to_string(), &text, &(positions.next().unwrap()));
+        assert!(result.is_some());
+        result = search_word_275(&"Abc".to_string(), &text, &(positions.next().unwrap()));
+        assert!(result.is_none());
+    }
+    #[test]
+    fn test_advent_of_code_example() {
+        let text = vec![
             "MMMSXXMASM".to_string(),
             "MSAMXMSMSA".to_string(),
             "AMXSXMAAMM".to_string(),
@@ -236,167 +325,48 @@ mod test {
             "MAMMMXMMMM".to_string(),
             "MXMXAXMASX".to_string(),
         ];
-        let a = number_of_occurences("XMAS", input);
-        if a.is_err() {
-            println!("{}", a.unwrap_err());
-            assert!(false);
-            return;
-        }
-        assert_eq!(a.unwrap(), 18);
-    }
-    fn test_example_2() {
-        let input = vec![
-            "XMASXX".to_string(),
-            "MMSMMO".to_string(),
-            "ACAAMM".to_string(),
-            "SSMSSS".to_string(),
-            "CXXXOO".to_string(),
-        ];
-        let a = number_of_occurences("XMAS", input);
-        if a.is_err() {
-            println!("{}", a.unwrap_err());
-            assert!(false);
-            return;
-        }
-        assert_eq!(a.unwrap(), 7);
+        let a = get_n_match("XMAS".to_string(), &text);
+        let b = get_n_match("SAMX".to_string(), &text);
+        assert_eq!(a.unwrap() + b.unwrap(), 18);
     }
     #[test]
-    fn test_get_part_horizontal() {
-        let input = vec![
-            "XMASXX".to_string(),
-            "MMSMMO".to_string(),
-            "ACAAMM".to_string(),
-            "SSMSSS".to_string(),
-            "CXXXOO".to_string(),
+    fn test_advent_of_code_x_example() {
+        let text = vec![
+            "MMSS".to_string(),
+            "MAAM".to_string(),
+            "MMSS".to_string(),
         ];
-        let occurences_first_char = get_occuranges('X', &input);
-        let mut expected = vec![
-            vec!["XMAS"],
-            vec!["MASX"],
-            vec!["ASXX"],
-            vec!["XXXO"],
-            vec!["XXOO"],
-            vec!["CXXX"]
-        ].into_iter();
-        for occ in occurences_first_char {
-            let a = get_part_string("XMAS", &input, &occ, &Direction::Horizontal);
-            if a.is_err() {
-                println!("{}", a.unwrap_err());
-                assert!(false);
-                return;
-            }
-            if a.unwrap() != expected.next().unwrap() {
-                assert!(false);
-                return;
-            }
-        }
+        let a = get_n_x_match("MAS".to_string(), &text);
+        assert_eq!(a.unwrap(), 2);
     }
     #[test]
-    fn test_get_part_vertical() {
-        let input = vec![
-            "XMASXX".to_string(),
-            "MMSMMO".to_string(),
-            "ACAAMM".to_string(),
-            "SSMSSS".to_string(),
-            "CXXXOO".to_string(),
+    fn test_advent_of_code_2_example() {
+        let text = vec![
+            "MMMSXXMASM".to_string(),
+            "MSAMXMSMSA".to_string(),
+            "AMXSXMAAMM".to_string(),
+            "MSAMASMSMX".to_string(),
+            "XMASAMXAMM".to_string(),
+            "XXAMMXXAMA".to_string(),
+            "SMSMSASXSS".to_string(),
+            "SAXAMASAAA".to_string(),
+            "MAMMMXMMMM".to_string(),
+            "MXMXAXMASX".to_string(),
         ];
-        let occurences_first_char = get_occuranges('X', &input);
-        let mut expected = vec![
-            vec!["XMAS"],
-            vec!["XMMS"],
-            vec!["XOMS"],
-            vec!["MCSX"],
-            vec!["SAMX"],
-            vec!["MASX"]
-        ].into_iter();
-        for occ in occurences_first_char {
-            let a = get_part_string("XMAS", &input, &occ, &Direction::Vertical);
-            println!("{:?}", a);
-            if a.is_err() {
-                println!("{}", a.unwrap_err());
-                assert!(false);
-                return;
-            }
-            if a.unwrap() != expected.next().unwrap() {
-                assert!(false);
-                return;
-            }
-        }
+        let a = get_n_x_match("MAS".to_string(), &text);
+        assert_eq!(a.unwrap() , 9);
     }
     #[test]
-    fn test_get_part_oblique45() {
-        let input = vec![
-            "XMASXX".to_string(),
-            "MMSMMO".to_string(),
-            "ACAAMM".to_string(),
-            "SSMSSS".to_string(),
-            "CXXXOO".to_string(),
-        ];
-        let occurences_first_char = get_occuranges('X', &input);
-        let mut expected = vec![
-            vec![],
-            vec!["SAMX"],
-            vec!["MAMX"],
-            vec!["XMAM"],
-            vec!["XSMO"],
-            vec![],
-        ].into_iter();
-        for occ in occurences_first_char {
-            let a = get_part_string("XMAS", &input, &occ, &Direction::Oblique45);
-            println!("{:?}", a);
-            if a.is_err() {
-                println!("{}", a.unwrap_err());
-                assert!(false);
-                return;
-            }
-            if a.unwrap() != expected.next().unwrap() {
-                assert!(false);
-                return;
-            }
-        }
-    }
-    #[test]
-    fn test_get_part_oblique275() {
-        let input = vec![
-            "XMASXX".to_string(),
-            "MMSMMO".to_string(),
-            "ACAAMM".to_string(),
-            "SSMSSS".to_string(),
-            "CXXXOO".to_string(),
-        ];
-        let occurences_first_char = get_occuranges('X', &input);
-        let mut expected = vec![
-            vec![],
-            vec!["SAMX"],
-            vec!["MAMX"],
-            vec!["XMAM"],
-            vec!["XSMO"],
-            vec![],
-        ].into_iter();
-        for occ in occurences_first_char {
-            let a = get_part_string("XMAS", &input, &occ, &Direction::Oblique275);
-            println!("{:?}", a);
-            if a.is_err() {
-                println!("{}", a.unwrap_err());
-                assert!(false);
-                return;
-            }
-           // if a.unwrap() != expected.next().unwrap() {
-           //     assert!(false);
-           //     return;
-           // }
-        }
-        assert!(false);
-    }
-    #[test]
-    fn test_ceres_search() {
+    fn test_advent_of_code() {
         let input = read_content("src/day4/input.txt".to_string());
-        let a = number_of_occurences("XMAS", input);
-        if a.is_err() {
-            println!("{}", a.unwrap_err());
-            assert!(false);
-            return;
-        }
-        assert_eq!(a.unwrap(), 18);
+        let a = get_n_match("XMAS".to_string(), &input);
+        let b = get_n_match("SAMX".to_string(), &input);
+        assert_eq!(a.unwrap() + b.unwrap(), 2591);
+    }
+    #[test]
+    fn test_advent_of_code_x_2() {
+        let input = read_content("src/day4/input.txt".to_string());
+        let a = get_n_x_match("MAS".to_string(), &input);
+        assert_eq!(a.unwrap(), 2);
     }
 }
